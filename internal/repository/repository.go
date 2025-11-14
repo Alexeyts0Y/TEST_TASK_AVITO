@@ -7,6 +7,7 @@ import (
 	"math/rand"
 	"time"
 
+	errWrappers "github.com/Alexeyts0Y/TEST_TASK_AVITO/internal/errors"
 	"github.com/Alexeyts0Y/TEST_TASK_AVITO/internal/model"
 	"github.com/Alexeyts0Y/TEST_TASK_AVITO/pkg/api"
 	"gorm.io/gorm"
@@ -40,7 +41,7 @@ func (r *PostgresRepository) SaveTeam(ctx context.Context, team api.Team) (api.T
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		teamModel := model.Team{TeamName: team.TeamName}
 		if result := tx.Where("team_name = ?", team.TeamName).First(&teamModel); result.RowsAffected > 0 {
-			return fmt.Errorf("%s: Команда с именем %s уже существует", api.TEAMEXISTS, team.TeamName)
+			return fmt.Errorf("%w: Команда с именем %s уже существует", errWrappers.ErrTeamExists, team.TeamName)
 		}
 		if err := tx.Create(&teamModel).Error; err != nil {
 			return err
@@ -71,7 +72,7 @@ func (r *PostgresRepository) GetTeam(ctx context.Context, teamName string) (api.
 	var teamModel model.Team
 	if err := r.DB.WithContext(ctx).Where("team_name = ?", teamName).First(&teamModel).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return api.Team{}, fmt.Errorf("%s: Команда с именем %s не найдена", api.NOTFOUND, teamName)
+			return api.Team{}, fmt.Errorf("%w: Команда с именем %s не найдена", errWrappers.ErrNotFound, teamName)
 		}
 		return api.Team{}, err
 	}
@@ -96,7 +97,7 @@ func (r *PostgresRepository) GetUser(ctx context.Context, userId string) (api.Us
 	var userModel model.User
 	if err := r.DB.WithContext(ctx).Where("user_id = ?", userId).First(&userModel).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return api.User{}, fmt.Errorf("%s: Пользователь с ID %s не найден", api.NOTFOUND, userId)
+			return api.User{}, fmt.Errorf("%w: Пользователь с ID %s не найден", errWrappers.ErrNotFound, userId)
 		}
 		return api.User{}, err
 	}
@@ -125,7 +126,7 @@ func (r *PostgresRepository) SetUserIsActive(ctx context.Context, userId string,
 func (r *PostgresRepository) SavePullRequest(ctx context.Context, pr api.PullRequest) (api.PullRequest, error) {
 	var existingPR model.PullRequest
 	if r.DB.WithContext(ctx).Where("pull_request_id = ?", pr.PullRequestId).First(&existingPR).RowsAffected > 0 {
-		return api.PullRequest{}, fmt.Errorf("%s: Пул реквест с ID %s уже существует", api.PREXISTS, pr.PullRequestId)
+		return api.PullRequest{}, fmt.Errorf("%w: Пул реквест с ID %s уже существует", errWrappers.ErrPrExists, pr.PullRequestId)
 	}
 
 	pr.CreatedAt = func() *time.Time { t := time.Now(); return &t }()
@@ -151,7 +152,7 @@ func (r *PostgresRepository) GetPullRequest(ctx context.Context, prId string) (a
 	var pullRequestModel model.PullRequest
 	if err := r.DB.WithContext(ctx).Where("pull_request_id = ?", prId).First(&pullRequestModel).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return api.PullRequest{}, fmt.Errorf("%s: Пул реквест с ID %s не существует", api.NOTFOUND, prId)
+			return api.PullRequest{}, fmt.Errorf("%w: Пул реквест с ID %s не существует", errWrappers.ErrNotFound, prId)
 		}
 		return api.PullRequest{}, err
 	}
