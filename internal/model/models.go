@@ -18,7 +18,7 @@ type User struct {
 
 type Team struct {
 	gorm.Model
-	TeamName string
+	TeamName string `gorm:"uniqueIndex"`
 }
 
 type PullRequest struct {
