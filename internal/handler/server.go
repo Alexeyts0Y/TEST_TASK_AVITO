@@ -70,8 +70,27 @@ func (s *Server) PostUsersSetIsActive(ctx context.Context, request api.PostUsers
 }
 
 func (s *Server) GetUsersGetReview(ctx context.Context, request api.GetUsersGetReviewRequestObject) (api.GetUsersGetReviewResponseObject, error) {
-	// TODO: implement method
-	return nil, nil
+	userId := request.Params.UserId
+
+	_, err := s.Repository.GetUser(ctx, userId)
+	if err != nil && errors.Is(err, errWrappers.ErrNotFound) {
+		return api.GetUsersGetReview200JSONResponse{
+			UserId:       userId,
+			PullRequests: []api.PullRequestShort{},
+		}, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	pullRequests, err := s.Repository.FindUserPullRequests(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	return api.GetUsersGetReview200JSONResponse{
+		PullRequests: pullRequests,
+		UserId:       userId,
+	}, nil
 }
 
 func (s *Server) PostPullRequestCreate(ctx context.Context, request api.PostPullRequestCreateRequestObject) (api.PostPullRequestCreateResponseObject, error) {
