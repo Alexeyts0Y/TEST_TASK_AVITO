@@ -74,8 +74,38 @@ func (s *Server) GetUsersGetReview(ctx context.Context, request api.GetUsersGetR
 }
 
 func (s *Server) PostPullRequestCreate(ctx context.Context, request api.PostPullRequestCreateRequestObject) (api.PostPullRequestCreateResponseObject, error) {
-	// TODO: implement method
-	return nil, nil
+	body := request.Body
+
+	author, err := s.Repository.GetUser(ctx, body.AuthorId)
+	if err != nil && errors.Is(err, errWrappers.ErrNotFound) {
+		return api.PostPullRequestCreate404JSONResponse(newErrorResponse(api.NOTFOUND, "Автор с таким ID не найден")), nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	candidates, err := s.Repository.FindActiveCandidates(ctx, author.TeamName, []string{author.UserId})
+	if err != nil && errors.Is(err, errWrappers.ErrNotFound) {
+		return api.PostPullRequestCreate404JSONResponse(newErrorResponse(api.NOTFOUND, "Команда с таким автором не найдена")), nil
+	}
+
+	assignedReviewers := s.Repository.ChooseRandomCandidates(candidates, 2)
+
+	newPullRequest := api.PullRequest{
+		PullRequestId:     body.PullRequestId,
+		PullRequestName:   body.PullRequestName,
+		AuthorId:          body.AuthorId,
+		AssignedReviewers: assignedReviewers,
+		Status:            api.PullRequestStatusOPEN,
+	}
+
+	savedPullRequest, err := s.Repository.SavePullRequest(ctx, newPullRequest)
+	if err != nil && errors.Is(err, errWrappers.ErrPrExists) {
+		return api.PostPullRequestCreate409JSONResponse(newErrorResponse(api.PREXISTS, "Такой пул реквест уже существует")), nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	return api.PostPullRequestCreate201JSONResponse{Pr: &savedPullRequest}, nil
 }
 
 func (s *Server) PostPullRequestMerge(ctx context.Context, request api.PostPullRequestMergeRequestObject) (api.PostPullRequestMergeResponseObject, error) {
