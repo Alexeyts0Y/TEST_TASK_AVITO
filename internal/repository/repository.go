@@ -27,6 +27,7 @@ type Repository interface {
 	FindUserPullRequests(ctx context.Context, userId string) ([]api.PullRequestShort, error)
 
 	FindActiveCandidates(ctx context.Context, teamName string, excludeIds []string) ([]string, error)
+	ChooseRandomCandidates(candidates []string, count int) []string
 }
 
 type PostgresRepository struct {
