@@ -56,12 +56,12 @@ func (s *Server) GetTeamGet(ctx context.Context, request api.GetTeamGetRequestOb
 }
 
 func (s *Server) PostUsersSetIsActive(ctx context.Context, request api.PostUsersSetIsActiveRequestObject) (api.PostUsersSetIsActiveResponseObject, error) {
-	userID := request.Body.UserId
+	userId := request.Body.UserId
 	isActive := request.Body.IsActive
 
-	user, err := s.Repository.SetUserIsActive(ctx, userID, isActive)
+	user, err := s.Repository.SetUserIsActive(ctx, userId, isActive)
 	if err != nil && errors.Is(err, errWrappers.ErrNotFound) {
-		return api.PostUsersSetIsActive404JSONResponse(newErrorResponse(api.NOTFOUND, fmt.Sprintf("User %s not found", userID))), nil
+		return api.PostUsersSetIsActive404JSONResponse(newErrorResponse(api.NOTFOUND, fmt.Sprintf("Пользователь %s не найден", userId))), nil
 	} else if err != nil {
 		return nil, err
 	}
