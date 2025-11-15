@@ -2,7 +2,10 @@ package config
 
 import (
 	"fmt"
+	"log"
 	"os"
+
+	"github.com/joho/godotenv"
 )
 
 type Config struct {
@@ -11,6 +14,11 @@ type Config struct {
 }
 
 func LoadConfig() (*Config, error) {
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		log.Fatal("Ошибка загрузки .env файла")
+	}
+
 	dbHost := os.Getenv("DB_HOST")
 	if dbHost == "" {
 		dbHost = "localhost"

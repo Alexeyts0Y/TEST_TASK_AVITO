@@ -67,3 +67,23 @@ func (s *Server) PostUsersSetIsActive(ctx context.Context, request api.PostUsers
 
 	return api.PostUsersSetIsActive200JSONResponse{User: &user}, nil
 }
+
+func (s *Server) GetUsersGetReview(ctx context.Context, request api.GetUsersGetReviewRequestObject) (api.GetUsersGetReviewResponseObject, error) {
+	// TODO: implement method
+	return nil, nil
+}
+
+func (s *Server) PostPullRequestCreate(ctx context.Context, request api.PostPullRequestCreateRequestObject) (api.PostPullRequestCreateResponseObject, error) {
+	// TODO: implement method
+	return nil, nil
+}
+
+func (s *Server) PostPullRequestMerge(ctx context.Context, request api.PostPullRequestMergeRequestObject) (api.PostPullRequestMergeResponseObject, error) {
+	// TODO: implement method
+	return nil, nil
+}
+
+func (s *Server) PostPullRequestReassign(ctx context.Context, request api.PostPullRequestReassignRequestObject) (api.PostPullRequestReassignResponseObject, error) {
+	// TODO: implement method
+	return nil, nil
+}
