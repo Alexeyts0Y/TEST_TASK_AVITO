@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	errWrappers "github.com/Alexeyts0Y/TEST_TASK_AVITO/internal/errors"
 	"github.com/Alexeyts0Y/TEST_TASK_AVITO/internal/repository"
@@ -109,8 +110,29 @@ func (s *Server) PostPullRequestCreate(ctx context.Context, request api.PostPull
 }
 
 func (s *Server) PostPullRequestMerge(ctx context.Context, request api.PostPullRequestMergeRequestObject) (api.PostPullRequestMergeResponseObject, error) {
-	// TODO: implement method
-	return nil, nil
+	pullRequestId := request.Body.PullRequestId
+
+	pullRequest, err := s.Repository.GetPullRequest(ctx, pullRequestId)
+	if err != nil && errors.Is(err, errWrappers.ErrNotFound) {
+		return api.PostPullRequestMerge404JSONResponse(newErrorResponse(api.NOTFOUND, "Пул реквест с таким ID не найден")), nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	if pullRequest.Status == api.PullRequestStatusMERGED {
+		return api.PostPullRequestMerge200JSONResponse{Pr: &pullRequest}, nil
+	}
+
+	currentTime := time.Now()
+	pullRequest.Status = api.PullRequestStatusMERGED
+	pullRequest.MergedAt = &currentTime
+
+	mergedPullRequest, err := s.Repository.UpdatePullRequest(ctx, pullRequest)
+	if err != nil {
+		return nil, err
+	}
+
+	return api.PostPullRequestMerge200JSONResponse{Pr: &mergedPullRequest}, nil
 }
 
 func (s *Server) PostPullRequestReassign(ctx context.Context, request api.PostPullRequestReassignRequestObject) (api.PostPullRequestReassignResponseObject, error) {
