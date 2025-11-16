@@ -31,17 +31,17 @@ func LoadConfig() (*Config, error) {
 
 	dbUser := os.Getenv("DB_USER")
 	if dbUser == "" {
-		return nil, fmt.Errorf("Переменная окружения DB_USER не установлена")
+		return nil, fmt.Errorf("переменная окружения DB_USER не установлена")
 	}
 
 	dbName := os.Getenv("DB_NAME")
 	if dbName == "" {
-		return nil, fmt.Errorf("Переменная окружения DB_NAME не установлена")
+		return nil, fmt.Errorf("переменная окружения DB_NAME не установлена")
 	}
 
 	dbPassword := os.Getenv("DB_PASSWORD")
 	if dbPassword == "" {
-		return nil, fmt.Errorf("Переменная окружения DB_PASSWORD не установлена")
+		return nil, fmt.Errorf("переменная окружения DB_PASSWORD не установлена")
 	}
 
 	serverPort := os.Getenv("SERVER_PORT")
