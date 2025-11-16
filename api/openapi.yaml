@@ -26,6 +26,22 @@ components:
         type: string
       description: Идентификатор пользователя
   schemas:
+    DeactivationSummary:
+      type: object
+      required: [team_name, deactivated_users_count]
+      properties:
+        team_name:
+          type: string
+        deactivated_users_count:
+          type: integer
+    ReassignmentSummary:
+      type: object
+      required: [team_name, reassigned_prs_count]
+      properties:
+        team_name:
+          type: string
+        reassigned_prs_count:
+          type: integer
     ErrorResponse:
       type: object
       required: [error]
@@ -219,6 +235,54 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /team/{teamName}/deactivate-members:
+    post:
+      summary: Деактивировать всех участников команды
+      parameters:
+        - name: teamName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Имя команды для деактивации
+      responses:
+        '200':
+          description: "Успешная деактивация и переназначение"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeactivationSummary'
+        '404':
+          description: "Команда не найдена"
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+
+  /teams/{teamName}/reassign-prs:
+    post:
+      summary: "Переназначить все открытые PR от неактивных ревьюеров"
+      operationId: postTeamReassignPrs
+      parameters:
+        - name: teamName
+          in: path
+          required: true
+          schema:
+            type: string
+          description: "Имя команды, для которой выполняется переназначение"
+      responses:
+        '200':
+          description: "Успешное переназначение"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReassignmentSummary'
+        '404':
+          description: "Команда не найдена"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /users/setIsActive:
     post:
