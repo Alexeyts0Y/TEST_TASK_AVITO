@@ -79,6 +79,11 @@ type PullRequestShort struct {
 // PullRequestShortStatus defines model for PullRequestShort.Status.
 type PullRequestShortStatus string
 
+// ReviewStats defines model for ReviewStats.
+type ReviewStats struct {
+	Stats []UserReviewStat `json:"stats"`
+}
+
 // Team defines model for Team.
 type Team struct {
 	Members  []TeamMember `json:"members"`
@@ -98,6 +103,12 @@ type User struct {
 	TeamName string `json:"team_name"`
 	UserId   string `json:"user_id"`
 	Username string `json:"username"`
+}
+
+// UserReviewStat defines model for UserReviewStat.
+type UserReviewStat struct {
+	ReviewCount int64  `json:"review_count"`
+	UserId      string `json:"user_id"`
 }
 
 // TeamNameQuery defines model for TeamNameQuery.
@@ -168,6 +179,9 @@ type ServerInterface interface {
 	// Переназначить конкретного ревьювера на другого из его команды
 	// (POST /pullRequest/reassign)
 	PostPullRequestReassign(c *gin.Context)
+	// Получить статистику по назначениям ревью
+	// (GET /stats/reviews)
+	GetStatsReviews(c *gin.Context)
 	// Создать команду с участниками (создаёт/обновляет пользователей)
 	// (POST /team/add)
 	PostTeamAdd(c *gin.Context)
@@ -234,6 +248,19 @@ func (siw *ServerInterfaceWrapper) PostPullRequestReassign(c *gin.Context) {
 	}
 
 	siw.Handler.PostPullRequestReassign(c)
+}
+
+// GetStatsReviews operation middleware
+func (siw *ServerInterfaceWrapper) GetStatsReviews(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetStatsReviews(c)
 }
 
 // PostTeamAdd operation middleware
@@ -368,6 +395,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	router.POST(options.BaseURL+"/pullRequest/create", wrapper.PostPullRequestCreate)
 	router.POST(options.BaseURL+"/pullRequest/merge", wrapper.PostPullRequestMerge)
 	router.POST(options.BaseURL+"/pullRequest/reassign", wrapper.PostPullRequestReassign)
+	router.GET(options.BaseURL+"/stats/reviews", wrapper.GetStatsReviews)
 	router.POST(options.BaseURL+"/team/add", wrapper.PostTeamAdd)
 	router.GET(options.BaseURL+"/team/get", wrapper.GetTeamGet)
 	router.GET(options.BaseURL+"/users/getReview", wrapper.GetUsersGetReview)
@@ -475,6 +503,22 @@ type PostPullRequestReassign409JSONResponse ErrorResponse
 func (response PostPullRequestReassign409JSONResponse) VisitPostPullRequestReassignResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(409)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type GetStatsReviewsRequestObject struct {
+}
+
+type GetStatsReviewsResponseObject interface {
+	VisitGetStatsReviewsResponse(w http.ResponseWriter) error
+}
+
+type GetStatsReviews200JSONResponse ReviewStats
+
+func (response GetStatsReviews200JSONResponse) VisitGetStatsReviewsResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
 
 	return json.NewEncoder(w).Encode(response)
 }
@@ -601,6 +645,9 @@ type StrictServerInterface interface {
 	// Переназначить конкретного ревьювера на другого из его команды
 	// (POST /pullRequest/reassign)
 	PostPullRequestReassign(ctx context.Context, request PostPullRequestReassignRequestObject) (PostPullRequestReassignResponseObject, error)
+	// Получить статистику по назначениям ревью
+	// (GET /stats/reviews)
+	GetStatsReviews(ctx context.Context, request GetStatsReviewsRequestObject) (GetStatsReviewsResponseObject, error)
 	// Создать команду с участниками (создаёт/обновляет пользователей)
 	// (POST /team/add)
 	PostTeamAdd(ctx context.Context, request PostTeamAddRequestObject) (PostTeamAddResponseObject, error)
@@ -719,6 +766,31 @@ func (sh *strictHandler) PostPullRequestReassign(ctx *gin.Context) {
 		ctx.Status(http.StatusInternalServerError)
 	} else if validResponse, ok := response.(PostPullRequestReassignResponseObject); ok {
 		if err := validResponse.VisitPostPullRequestReassignResponse(ctx.Writer); err != nil {
+			ctx.Error(err)
+		}
+	} else if response != nil {
+		ctx.Error(fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetStatsReviews operation middleware
+func (sh *strictHandler) GetStatsReviews(ctx *gin.Context) {
+	var request GetStatsReviewsRequestObject
+
+	handler := func(ctx *gin.Context, request interface{}) (interface{}, error) {
+		return sh.ssi.GetStatsReviews(ctx, request.(GetStatsReviewsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetStatsReviews")
+	}
+
+	response, err := handler(ctx, request)
+
+	if err != nil {
+		ctx.Error(err)
+		ctx.Status(http.StatusInternalServerError)
+	} else if validResponse, ok := response.(GetStatsReviewsResponseObject); ok {
+		if err := validResponse.VisitGetStatsReviewsResponse(ctx.Writer); err != nil {
 			ctx.Error(err)
 		}
 	} else if response != nil {
