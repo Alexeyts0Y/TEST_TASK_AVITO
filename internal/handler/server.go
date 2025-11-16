@@ -208,3 +208,12 @@ func (s *Server) PostPullRequestReassign(ctx context.Context, request api.PostPu
 		ReplacedBy: newReviewrId,
 	}, nil
 }
+
+func (s *Server) GetStatsReviews(ctx context.Context, request api.GetStatsReviewsRequestObject) (api.GetStatsReviewsResponseObject, error) {
+	stats, err := s.Repository.GetReviewStats(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return api.GetStatsReviews200JSONResponse{Stats: stats}, nil
+}

@@ -120,6 +120,24 @@ components:
         status:
           type: string
           enum: [OPEN, MERGED]
+    UserReviewStat:
+      type: object
+      required: [ user_id, review_count]
+      properties:
+        user_id:
+          type: string
+        review_count:
+          type: integer
+          format: int64
+    ReviewStats:
+      type: object
+      required: 
+        - stats
+      properties:
+        stats:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserReviewStat'
 
 paths:
   /team/add:
@@ -438,3 +456,16 @@ paths:
                     pull_request_name: Add search
                     author_id: u1
                     status: OPEN
+  
+  /stats/reviews:
+    get:
+      summary: "Получить статистику по назначениям ревью"
+      operationId: getStatsReviews
+      responses:
+        '200':
+          description: "Успешный ответ со статистикой"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewStats'
+  
