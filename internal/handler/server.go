@@ -217,3 +217,25 @@ func (s *Server) GetStatsReviews(ctx context.Context, request api.GetStatsReview
 
 	return api.GetStatsReviews200JSONResponse{Stats: stats}, nil
 }
+
+func (s *Server) PostTeamTeamNameDeactivateMembers(ctx context.Context, request api.PostTeamTeamNameDeactivateMembersRequestObject) (api.PostTeamTeamNameDeactivateMembersResponseObject, error) {
+	count, err := s.Repository.DeactivateTeamMembers(ctx, request.TeamName)
+	if err != nil && errors.Is(err, errWrappers.ErrNotFound) {
+		return api.PostTeamTeamNameDeactivateMembers404JSONResponse(newErrorResponse(api.NOTFOUND, "Команда с таким именем не найдена")), nil
+	} else if err != nil {
+		return nil, err
+	}
+	return api.PostTeamTeamNameDeactivateMembers200JSONResponse{TeamName: request.TeamName, DeactivatedUsersCount: int(count)}, nil
+}
+
+func (s *Server) PostTeamReassignPrs(ctx context.Context, request api.PostTeamReassignPrsRequestObject) (api.PostTeamReassignPrsResponseObject, error) {
+	summary, err := s.Repository.ReassignPRsForTeam(ctx, request.TeamName)
+
+	if err != nil && errors.Is(err, errWrappers.ErrNotFound) {
+		return api.PostTeamReassignPrs404JSONResponse(newErrorResponse(api.NOTFOUND, "Команда с таким именем не найдена")), nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	return api.PostTeamReassignPrs200JSONResponse{ReassignedPrsCount: summary.ReassignedPrsCount, TeamName: summary.TeamName}, nil
+}
