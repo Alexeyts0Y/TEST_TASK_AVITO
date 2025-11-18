@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -16,7 +15,7 @@ type Config struct {
 func LoadConfig() (*Config, error) {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Ошибка загрузки .env файла")
+		fmt.Printf("Ошибка загрузки .env файла, произведем загрузку с настройками по умолчанию")
 	}
 
 	dbHost := os.Getenv("DB_HOST")
