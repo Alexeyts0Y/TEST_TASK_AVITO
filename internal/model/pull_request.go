@@ -5,11 +5,10 @@ import (
 	"time"
 
 	"github.com/Alexeyts0Y/TEST_TASK_AVITO/pkg/api"
-	"gorm.io/gorm"
 )
 
 type PullRequest struct {
-	gorm.Model
+	BaseModel
 	AssignedReviewers string
 	AuthorId          string
 	CreatedAt         *time.Time
