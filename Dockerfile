@@ -22,6 +22,7 @@ WORKDIR /root/
 
 COPY --from=builder /app/main .
 COPY --from=builder /app/api/openapi.yaml ./api/
+COPY --from=builder /app/.env ./
 
 RUN chown -R app:app ./
 
