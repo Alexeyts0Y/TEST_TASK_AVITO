@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -16,7 +15,7 @@ type Config struct {
 func LoadConfig() (*Config, error) {
 	err := godotenv.Load(".env")
 	if err != nil {
-		log.Fatal("Ошибка загрузки .env файла")
+		fmt.Printf("Ошибка загрузки .env файла, произведем загрузку с настройками по умолчанию")
 	}
 
 	dbHost := os.Getenv("DB_HOST")
@@ -31,17 +30,17 @@ func LoadConfig() (*Config, error) {
 
 	dbUser := os.Getenv("DB_USER")
 	if dbUser == "" {
-		return nil, fmt.Errorf("переменная окружения DB_USER не установлена")
+		dbUser = "postgres"
 	}
 
 	dbName := os.Getenv("DB_NAME")
 	if dbName == "" {
-		return nil, fmt.Errorf("переменная окружения DB_NAME не установлена")
+		dbName = "test"
 	}
 
 	dbPassword := os.Getenv("DB_PASSWORD")
 	if dbPassword == "" {
-		return nil, fmt.Errorf("переменная окружения DB_PASSWORD не установлена")
+		dbPassword = "postgres"
 	}
 
 	serverPort := os.Getenv("SERVER_PORT")
